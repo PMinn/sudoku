@@ -2,39 +2,12 @@
 #include <cstdlib>
 #include <ctime> 
 #include<iostream>
-#include<iomanip>
-#include<windows.h>
 #include <conio.h>
+#include<windows.h>
 using namespace std;
 
-void SetColor(int color = 7)
-{
-	HANDLE hConsole;
-	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, color);
-}
-void newPosition(int r, int c)
-{
-	COORD scrn;
-	HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
-	scrn.X = c;
-	scrn.Y = r;
-	SetConsoleCursorPosition(hOuput, scrn);
-}
-/*
-void getWH(int &w,int &h) {
-	RECT rect;
-	HWND hwnd = GetDesktopWindow();
-	if (GetWindowRect(hwnd, &rect))
-	{
-		w = rect.right - rect.left;
-		h = rect.bottom - rect.top;
-	}
-}*/
 void init(int array[],int num) {
-	for (int i = 0; i < 9; i++) {
-		for (int j = 0; j < 9; j++)array[i*9+j] = num;
-	}
+	for (int i = 0; i < 81; i++)array[i] = num;
 }
 void Sudoku::copy(const int *from,int *to) {
 	for (int i = 0; i < 81; i++) {
@@ -48,7 +21,7 @@ Sudoku::Sudoku() {
 	init(data,0);
 }
 bool Sudoku::creat() {
-	srand(time(0));
+	srand(time(NULL));
 	for (int i = 0; i < 9; i++)data[i] = i + 1;
 	for (int i = 0; i < 9; i++) {
 		int t = data[i];
@@ -99,6 +72,7 @@ bool Sudoku::creat() {
 		}*/
 	}
 	createMask();
+	copy(mask, exit);
 	return true;
 }
 void Sudoku::createMask() {
@@ -142,121 +116,92 @@ bool Sudoku::isBoxVailable(int r,int c,int newData[]) {
 	}
 	return true;
 }
-void Sudoku::input(int r, int c, int num) {
-	if (mask[r*9+c] == 1) {
-		newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
-	}else {
-		newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
-		if(data[r * 9 + c]!=num-48)SetColor(207);
+bool Sudoku::input(int r, int c, int num, int x, int y) {
+	if (mask[r * 9 + c] == 1) {
+		setPosition(x,y);
+	} else {
+		if (data[r * 9 + c] != num - 48) {
+			life--;
+			printLife();
+			setColor(207);
+			exit[r * 9 + c] = 0;
+		}
+		else {
+			exit[r * 9 + c] = 1;
+			int countExit = 0;
+			for (int i = 0; i < 81; i++)countExit += exit[i];
+			if (countExit == 81) {
+				setPosition(x, y);
+				cout << num - 48;
+				return true;
+			}
+		}
+		setPosition(x, y);
 		cout << num - 48;
-		SetColor();
-		newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+		setColor();
+		setPosition(x,y);
+		return false;
 	}
-	
 }
-void Sudoku::start() {
+void Sudoku::start(int x, int y) {
+	bool stop = false;
 	int r = 0;
 	int c = 0;
-	newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
-	int t=0;
-	while (t!=274&&t!=27) {
-		if (t / 10 >= 49 && t / 10 <= 57)input(r, c, t / 10);
-		if (t >= 49 && t <= 57)input(r, c, t);
+	setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+	int t = 0;
+	while (t != 274 && t != 27) {
+		if (t / 10 >= 49 && t / 10 <= 57)stop = input(r, c, t / 10, x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+		if (t >= 49 && t <= 57)stop = input(r, c, t, x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+		if (stop || life <= 0)break;
 		t = _getch();
 		if (t == 224) {
 			t = _getch();
-			if (t / 10 >= 49 && t / 10 <= 57)input(r, c, t / 10);
-			if (t >= 49 && t <= 57)input(r, c, t);
+			if (t / 10 >= 49 && t / 10 <= 57)stop = input(r, c, t / 10, x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+			if (t >= 49 && t <= 57)stop = input(r, c, t, x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+			if (stop || life <= 0)break;
 			switch (t) {
 			case 72:
 				if (r - 1 < 0) {
-					newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+					setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 					break;
 				}
 				r--;
-				newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+				setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 				break;
 			case 80:
 				if (r + 1 > 8) {
-					newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+					setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 					break;
 				}
 				r++;
-				newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+				setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 				break;
 			case 75:
 				if (c - 1 < 0) {
-					newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+					setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 					break;
 				}
 				c--;
-				newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+				setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 				break;
 			case 77:
 				if (c + 1 > 8) {
-					newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+					setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 					break;
 				}
 				c++;
-				newPosition(1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
+				setPosition(x + 1 + r + r / 3, 2 + c * 2 + c / 3 * 2);
 				break;
 			default:break;
 			}
 		}
 	}
-	/*
-	while (first=_getch())
-	{
-		newPosition(9, 0);
-		cout << "first: " << first << endl;
-		if (first == 324)return;
-		t = _getch();
-		if (t == 224)t = _getch();
-		newPosition(10, 0);
-		cout <<"t: " <<t << endl;
-		switch (t)
-		{
-		case 32:
-			return;
-			break;
-		case 72:
-			if (r - 1 < 0) {
-				newPosition(r, c);
-				break;
-			}
-			newPosition(--r, c);
-			break;
-		case 80:
-			if (r + 1 > 8) {
-				newPosition(r, c);
-				break;
-			}
-			newPosition(++r, c);
-			break;
-		case 75:
-			if (c - 1 < 0) {
-				newPosition(r, c);
-				break;
-			}
-			newPosition(r, --c);
-			break;
-		case 77:
-			if (c + 1 > 8) {
-				newPosition(r, c);
-				break;
-			}
-			newPosition(r, ++c);
-			break;
-		default:
-			break;
-		}
-	}*/
 }
 
-void Sudoku::print() {
+void Sudoku::print(int r,int c) {
 	//system("cls");
-	newPosition(0, 0);
-	SetColor();
+	setPosition(r, c);
+	setColor();
 	cout << "╔═══════════════════════╗" << endl;
 	for (int i = 0; i < 9; i++) {
 		cout << "║ ";
@@ -270,6 +215,7 @@ void Sudoku::print() {
 		if (i == 2 || i == 5)cout << "║-------+-------+-------║" << endl;
 	}
 	cout << "╚═══════════════════════╝" << endl;
+	printLife();
 }
 
 
@@ -284,11 +230,16 @@ void Sudoku::dig() {
 	}
 	copy(data, digData);
 	digData[order[0]] = 0;
+	digData[order[1]] = 0;
+	digData[order[2]] = 0;
+	mask[order[0]] = 0;
+	mask[order[1]] = 0;
+	mask[order[2]] = 0;
 	int target = 50;
-	int shouldDigging =target;
-	int numOfDig = 0;
-	for (int i = 0; i < target && target<81; i++) {
-		int *tData=new int[81];
+	int shouldDigging = target;
+	int numOfDig = 3;
+	for (int i = 3; i < target && target < 81; i++) {
+		int* tData = new int[81];
 		int t = digData[order[i]];
 		digData[order[i]] = 0;
 		ans = 0;
@@ -296,15 +247,22 @@ void Sudoku::dig() {
 		if (getAnswer(tData)) {
 			digData[order[i]] = t;
 			target++;
-		}
-		else {
+		} else {
 			mask[order[i]] = 0;
 			numOfDig++;
 		}
-		for(int j=0;j<ans;j++)delete ansList[j];
-		delete [] tData;
+		delete[] tData;
 	}
-	if (numOfDig < shouldDigging)createMask();
+	if (numOfDig < shouldDigging) {
+		if (createMaskTimes > 2) {
+			createMaskTimes = 0;
+			creat();
+		}
+		else {
+			createMaskTimes++;
+			createMask();
+		}
+	}
 }
 bool Sudoku::getAnswer(int *digData) {
 	if (ans > 1)return true;
@@ -324,13 +282,34 @@ bool Sudoku::getAnswer(int *digData) {
 						next = true;
 					}
 				}
-
 			}
-
 	}
 	if (ans > 1)return true;
 	if (!getZero) { 
 		ans++;
 	}else if (!next)delete[] digData;
 	return false;
+};
+void Sudoku::setColor(int color) {
+	HANDLE hConsole;
+	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, color);
+}
+void Sudoku::setPosition(int r, int c) {
+	COORD scrn;
+	HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
+	scrn.X = c;
+	scrn.Y = r;
+	SetConsoleCursorPosition(hOuput, scrn);
+}
+
+void Sudoku::printLife() {
+	setPosition(16, 0);
+	setColor();
+	cout << "剩餘次數：";
+	setColor(4);
+	for (int i = 5; i > 0; i--)
+		if (i > life)cout << "○";
+		else cout << "●";
+	setColor();
 }
