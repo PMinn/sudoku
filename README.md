@@ -18,12 +18,14 @@
 ```
 使用方向鍵移動控制
 ```
+
 ![](https://github.panalan.repl.co/sudoku/2.gif "剩餘次數")
 ```
 按下數字鍵輸入
 每局只有5次的錯誤機會
 數字歸零即挑戰失敗
 ```
+
 ![](https://github.panalan.repl.co/sudoku/3.gif "重新")
 ```
 結束後不管輸贏會載入下一局
